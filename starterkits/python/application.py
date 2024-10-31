@@ -10,29 +10,23 @@ import websockets
 
 from bot import Bot
 from game_message import TeamGameState
-import subprocess
+
 
 async def run():
     uri = "ws://127.0.0.1:8765"
 
-    bot = Bot()
+    async with websockets.connect(uri, max_size=None) as websocket:
+        bot = Bot()
+        if "TOKEN" in os.environ:
+            await websocket.send(
+                json.dumps({"type": "REGISTER", "token": os.environ["TOKEN"]})
+            )
+        else:
+            await websocket.send(
+                json.dumps({"type": "REGISTER", "teamName": "MyPythonicBot"})
+            )
 
-    for _ in range(1):
-        p = subprocess.Popen('./blitz-challenge-macos')
-        await asyncio.sleep(2)
-        async with websockets.connect(uri, max_size=None) as websocket:
-            if "TOKEN" in os.environ:
-                await websocket.send(
-                    json.dumps({"type": "REGISTER", "token": os.environ["TOKEN"]})
-                )
-            else:
-                await websocket.send(
-                    json.dumps({"type": "REGISTER", "teamName": "MyPythonicBot"})
-                )
-
-            await game_loop(websocket=websocket, bot=bot)
-        
-        p.kill()
+        await game_loop(websocket=websocket, bot=bot)
 
 
 async def game_loop(websocket: websockets.WebSocketServerProtocol, bot: Bot):
@@ -55,7 +49,6 @@ async def game_loop(websocket: websockets.WebSocketServerProtocol, bot: Bot):
         # Just so your bot doesn't completely crash. ;)
         try:
             actions = bot.get_next_move(game_message)
-            print(bot.Q(game_message))
         except Exception:
             print("Exception while getting next moves:")
             print(traceback.format_exc())
