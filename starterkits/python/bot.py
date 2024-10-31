@@ -1,9 +1,9 @@
 import copy
 from functools import partial
 from game_message import *
-import random
-import math
-import numpy as np
+#import random
+#import math
+#import numpy as np
 from astar.search import AStar
 
 class Bot:
